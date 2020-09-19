@@ -81,10 +81,10 @@ class UserController extends Controller
         if ($request->get('avatar_path'))
             $fields['avatar'] = Input::get('avatar_path');
 
-//        $controller = new Controller();
-//        if ($request->hasFile('avatar')) {
-//            $fields['avatar'] = $controller->storeMedia($request->file('avatar'), 'picture');
-//        }
+        //        $controller = new Controller();
+        //        if ($request->hasFile('avatar')) {
+        //            $fields['avatar'] = $controller->storeMedia($request->file('avatar'), 'picture');
+        //        }
 
         User::where('id', $id)->update($fields);
 
@@ -129,9 +129,11 @@ class UserController extends Controller
 
         $id = $this->getUserId($id);
 
-        $wp = User::select(['id', 'first_name', 'last_name'])->where('id', $id)->with(['workout' => function ($q) {
-            return $q->orderBy('id', 'Desc');
-        }])->first();
+        $wp = User::select(['id', 'first_name', 'last_name'])
+            ->where('id', $id)
+            ->with(['workout' => function ($q) {
+                return $q->orderBy('id', 'Desc')->where('workout', '<>', "\"\"")->where('workout', '<>', null);
+            }])->first();
         return Result::setData($wp)->get();
 
     }
@@ -141,7 +143,10 @@ class UserController extends Controller
     {
 
         $id = $this->getUserId($id);
-        $wp = User::select(['id', 'first_name', 'last_name'])->where('id', $id)->with('nutrition')->first();
+        $wp = User::select(['id', 'first_name', 'last_name'])->where('id', $id)
+            ->with(['nutrition' => function ($q) {
+                return $q->orderBy('id', 'Desc')->where('nutrition', '<>', "\"\"")->where('workout', '<>', null);
+            }])->first();
         return Result::setData($wp)->get();
 
     }
@@ -151,7 +156,9 @@ class UserController extends Controller
     {
         $id = $this->getUserId($id);
 
-        $wp['user'] = User::select(['id', 'first_name', 'last_name'])->where('id', $id)->with('analyze')->first();
+        $wp['user'] = User::select(['id', 'first_name', 'last_name'])->where('id', $id)->with(['analyze' => function ($q) {
+            return $q->orderBy('id', 'Desc')->where('nutrition', '<>', "\"\"")->where('workout', '<>', null);
+        }])->first();
         $wp['chart'] = $this->chart();
 
 
@@ -164,7 +171,10 @@ class UserController extends Controller
     {
         $id = $this->getUserId($id);
 
-        $wp['user'] = User::select(['id', 'first_name', 'last_name'])->where('id', $id)->with('sounds')->first();
+        $wp['user'] = User::select(['id', 'first_name', 'last_name'])->where('id', $id)
+            ->with(['sounds' => function ($q) {
+                return $q->orderBy('id', 'Desc')->where('nutrition', '<>', "\"\"")->where('workout', '<>', null);
+            }])->first();
 
 
         return Result::setData($wp)->get();
@@ -200,20 +210,20 @@ class UserController extends Controller
         foreach ($analyses as $item) {
 
 
-            if ($item['analyze']['BF']['Percent'] > 0) {
+            if (isset($item['analyze']['BF']['Percent']) && $item['analyze']['BF']['Percent'] > 0) {
                 $data['BF'][$i]['created_at'] = $item['created_at'];
                 $data['BF'][$i]['Percent'] = $item['analyze']['BF']['Percent'];
                 $i++;
             }
 
-            if ($item['analyze']['WHR']['Ratio'] > 0) {
+            if (isset($item['analyze']['WHR']['Ratio']) && $item['analyze']['WHR']['Ratio'] > 0) {
                 $data['WHR'][$j]['created_at'] = $item['created_at'];
                 $data['WHR'][$j]['Ratio'] = $item['analyze']['WHR']['Ratio'];
                 $j++;
             }
 
 
-            if ($item['analyze']['BMI']['Amount'] > 0) {
+            if (isset($item['analyze']['BMI']['Amount']) && $item['analyze']['BMI']['Amount'] > 0) {
                 $data['BMI'][$k]['created_at'] = $item['created_at'];
                 $data['BMI'][$k]['Amount'] = $item['analyze']['BMI']['Amount'];
                 $k++;
