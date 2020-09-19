@@ -18,7 +18,7 @@ use App\User;
 class EmailAdapter
 {
 
-    private $daysPersonMustDoWorkout;
+    private $daysPersonMustDoWorkout = [];
 
     private $types = [
         //$anaerobics
@@ -50,7 +50,7 @@ class EmailAdapter
         'FST7' => "FST7",
         'Tri-set' => "تراي ست",
         'Giant-set' => "جاينت ست",
-//$aerobics
+        //$aerobics
         'Track' => "ثابت",
         'Interval' => "متناوب",
         'Weight Loss' => "کاهش وزن",
@@ -148,9 +148,7 @@ class EmailAdapter
         $email = Adapted::where('checksum', $adaptedEmail['checksum'])->first();
 
 
-
         $adaptedEmail = $this->convertCharsToPersian($adaptedEmail);
-
 
 
         if ($email) {
@@ -174,7 +172,6 @@ class EmailAdapter
     public function adapt()
     {
         $this->setUser();
-        $this->setDaysPersonMustDoWorkout();
         $this->setWorkout();
         $this->setNutrition();
         $this->setAnalyse();
@@ -273,12 +270,12 @@ class EmailAdapter
             $i++;
 
 
-//            $adaptedWorkout = $this->attachFile($adaptedWorkout);
+            //            $adaptedWorkout = $this->attachFile($adaptedWorkout);
 
             /*__________________________________________________________________________________________________________________________________________Added 19 Dec end*/
 
-//            if ($adapted)
-//                $adaptedWorkouts[] = array_merge($adapted, $workouts[$key]);
+            //            if ($adapted)
+            //                $adaptedWorkouts[] = array_merge($adapted, $workouts[$key]);
 
 
         }
@@ -289,13 +286,13 @@ class EmailAdapter
 
     private function attachFile($workout)
     {
-//        if (isset($workout['Link'])) {
-//            $link = $workout['Link'];
-//            preg_match('/.*show\/(.*)/', $link, $matches);
-//            $id = $matches[1];
-//            $row = Workout::select('id')->where('id', $id)->with('addables')->first()->toArray();
-//            return array_merge($workout, $row);
-//        }
+        //        if (isset($workout['Link'])) {
+        //            $link = $workout['Link'];
+        //            preg_match('/.*show\/(.*)/', $link, $matches);
+        //            $id = $matches[1];
+        //            $row = Workout::select('id')->where('id', $id)->with('addables')->first()->toArray();
+        //            return array_merge($workout, $row);
+        //        }
 
 
         $row = Workout::select('id', 'name as name_fa')->where('en_name', $workout['name'])->with('addables')->first();
@@ -318,8 +315,8 @@ class EmailAdapter
 
         foreach ($meals as $key => $value) {
 
-//            $adaptedMeal[$i]['key'] =  in_array($key, ['Title', 'Time']) ? $convertList[$key] : $key;
-//            $adaptedMeal[$i]['value'] = $value;
+            //            $adaptedMeal[$i]['key'] =  in_array($key, ['Title', 'Time']) ? $convertList[$key] : $key;
+            //            $adaptedMeal[$i]['value'] = $value;
 
 
             if (in_array($key, ['Title', 'Time'])) {
@@ -372,10 +369,12 @@ class EmailAdapter
 
         $this->files_qtv = (is_array($filesName) && count($filesName)) ? count($filesName) : 0;
 
+        $this->setDaysPersonMustDoWorkout();
+
 
         $commentkey = $this->getKeyByPattern('/^Comments.*\.ini$/');
 
-        if ($commentkey OR $this->files_qtv == 0)
+        if ($commentkey or $this->files_qtv == 0)
             $this->setWorkoutDays();
 
         $workoutWeekDays = [];
@@ -432,19 +431,19 @@ class EmailAdapter
             $this->workoutDays = $adaptedWorkoutDays ? $adaptedWorkoutDays : null;
         }
 
+
     }
 
 
     private function setDaysPersonMustDoWorkout()
     {
-
-
         $days = [
             "Day1" => "false",
             "Day2" => "false",
             "Day3" => "false",
             "Day4" => "false",
             "Day5" => "false",
+            "Day6" => "false",
             "Day6" => "false",
             "Day7" => "false",
         ];
@@ -495,8 +494,27 @@ class EmailAdapter
 
         $this->daysPersonMustDoWorkout = $days;
 
-        if (isset($this->receivedFiles['Comments.ini']['Week']) && is_array($this->receivedFiles['Comments.ini']['Week']) && count($this->receivedFiles['Comments.ini']['Week']) > 0)
+        if (
+            isset($this->receivedFiles['Comments.ini']['Week']) &&
+            is_array($this->receivedFiles['Comments.ini']['Week']) &&
+            count($this->receivedFiles['Comments.ini']['Week']) > 0 &&
+            $this->files_qtv == $this->trueDaysQtv()
+        ) {
+
             $this->daysPersonMustDoWorkout = $this->receivedFiles['Comments.ini']['Week'];
+        }
+
+
+    }
+
+    private function trueDaysQtv()
+    {
+        $qtv = 0;
+        foreach ($this->receivedFiles['Comments.ini']['Week'] as $key => $value)
+            if ($value === "true" or $value === "True" or $value === true)
+                $qtv += 1;
+
+        return $qtv;
 
     }
 
