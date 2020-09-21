@@ -145,7 +145,7 @@ class UserController extends Controller
         $id = $this->getUserId($id);
         $wp = User::select(['id', 'first_name', 'last_name'])->where('id', $id)
             ->with(['nutrition' => function ($q) {
-                return $q->orderBy('id', 'Desc')->where('nutrition', '<>', "\"\"")->where('workout', '<>', null);
+                return $q->orderBy('id', 'Desc')->where('nutrition', '<>', "\"\"")->where('nutrition', '<>', null);
             }])->first();
         return Result::setData($wp)->get();
 
@@ -157,7 +157,7 @@ class UserController extends Controller
         $id = $this->getUserId($id);
 
         $wp['user'] = User::select(['id', 'first_name', 'last_name'])->where('id', $id)->with(['analyze' => function ($q) {
-            return $q->orderBy('id', 'Desc')->where('nutrition', '<>', "\"\"")->where('workout', '<>', null);
+            return $q->orderBy('id', 'Desc')->where('analyze', '<>', "\"\"")->where('analyze', '<>', null);
         }])->first();
         $wp['chart'] = $this->chart();
 
@@ -238,6 +238,7 @@ class UserController extends Controller
 
     private function getUserId($id)
     {
+
         $userId = null;
 
         switch ($id) {
